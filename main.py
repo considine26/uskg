@@ -123,7 +123,7 @@ async def interactive_menu():
                 choices=[
                     "1. 查看域名",
                     "2. 注册域名",
-                    "3. 修改NS记录 (Nameservers)",
+                    "3. 修改记录 (NameServers)",
                     "4. 删除域名",
                     "5. 切换账号",
                     "6. 退出程序"
@@ -164,7 +164,7 @@ async def interactive_menu():
                 await questionary.press_any_key_to_continue("按任意键返回主菜单...").ask_async()
                 clear_screen()
 
-            elif action == "3. 修改NS记录 (Nameservers)":
+            elif action == "3. 修改记录 (NameServers)":
                 print("🔍 正在拉取可操作域名...")
                 domains = await client.list_domains()
                 if not isinstance(domains, list) or not domains:
