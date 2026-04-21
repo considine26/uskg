@@ -44,16 +44,27 @@ class USKGClient:
     def __init__(self, token: str):
         self.headers = {
             "Authorization": f"Bearer {token}",
-            "Accept": "application/json"
+            "Accept": "application/json",
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
         }
-        self.client = httpx.AsyncClient(base_url=BASE_URL, headers=self.headers, timeout=15.0)
+        self.client = httpx.AsyncClient(base_url=BASE_URL, headers=self.headers, timeout=15.0, follow_redirects=True)
 
     async def list_domains(self):
         try:
             response = await self.client.get("/domains")
             if response.status_code == 200:
                 return response.json().get("data", [])
-            return f"Error: {response.status_code} - {response.text}"
+            
+            # 针对 403 等非 JSON 错误的诊断
+            error_msg = f"Error: {response.status_code}"
+            if "text/html" in response.headers.get("Content-Type", ""):
+                import re
+                title = re.search(r"<title>(.*?)</title>", response.text)
+                title_str = title.group(1) if title else "未知 HTML 错误"
+                error_msg += f" (页面标题: {title_str})"
+            else:
+                error_msg += f" - {response.text[:200]}"
+            return error_msg
         except Exception as e:
             return f"Network Error: {str(e)}"
 
