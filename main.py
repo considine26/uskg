@@ -121,16 +121,16 @@ async def interactive_menu():
             action = await questionary.select(
                 f"[{current_account.get('USER')}] 请选择操作:",
                 choices=[
-                    "1. 列出所有域名",
-                    "2. 注册新域名",
-                    "3. 修改 DNS (Nameservers)",
+                    "1. 查看域名",
+                    "2. 注册域名",
+                    "3. 修改NS记录 (Nameservers)",
                     "4. 删除域名",
                     "5. 切换账号",
                     "6. 退出程序"
                 ]
             ).ask_async()
 
-            if action == "1. 列出所有域名":
+            if action == "1. 查看域名":
                 clear_screen()
                 print(f"--- 账号: {current_account.get('USER')} | 域名列表 ---")
                 print("🔍 正在获取列表...")
@@ -148,7 +148,7 @@ async def interactive_menu():
                 await questionary.press_any_key_to_continue("按任意键返回主菜单...").ask_async()
                 clear_screen()
 
-            elif action == "2. 注册新域名":
+            elif action == "2. 注册域名":
                 domain = await questionary.text("请输入要注册的域名 (例如 example.us.kg):").ask_async()
                 if not domain: continue
                 slot_type = await questionary.select(
@@ -164,7 +164,7 @@ async def interactive_menu():
                 await questionary.press_any_key_to_continue("按任意键返回主菜单...").ask_async()
                 clear_screen()
 
-            elif action == "3. 修改 DNS (Nameservers)":
+            elif action == "3. 修改NS记录 (Nameservers)":
                 print("🔍 正在拉取可操作域名...")
                 domains = await client.list_domains()
                 if not isinstance(domains, list) or not domains:
