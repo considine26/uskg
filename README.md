@@ -4,7 +4,7 @@
 
 ## 🚀 功能特性
 
-- **多账号支持**：在 `.env` 文件中配置多个账号，程序运行后可自由切换。
+- **多账号支持**：在 `users.json` 文件中配置多个账号，程序运行后可自由切换。
 - **交互式菜单**：使用 `questionary` 提供流畅的命令行交互体验。
 - **全生命周期管理**：
   - 🔍 **查看域名**：获取账号下所有域名及其状态、NameServers。
@@ -18,7 +18,7 @@
 1. **克隆/下载项目**
 2. **安装依赖**（建议在虚拟环境中进行）：
    ```bash
-   pip install httpx python-dotenv questionary
+   pip install httpx questionary
    ```
    或者如果你使用 `uv`：
    ```bash
@@ -27,21 +27,26 @@
 
 ## ⚙️ 配置说明
 
-在项目根目录下创建一个 `.env` 文件，用于存放账号信息。支持配置多个账号，格式如下：
+在项目根目录下配置 `users.json` 文件，用于存放账号信息与 API Base URL。格式如下：
 
-```env
-# 账号 1
-USER=User1
-MAIL=user1@example.com
-API_TOKEN=your_token_here_1
-
-# 账号 2
-USER=User2
-MAIL=user2@example.com
-API_TOKEN=your_token_here_2
+```json
+{
+    "version": "1.0",
+    "api_base_url": "https://domain-api.digitalplat.org/api/v1",
+    "profiles": {
+        "User1": {
+            "mail": "user1@example.com",
+            "api_token": "your_token_here_1"
+        },
+        "User2": {
+            "mail": "user2@example.com",
+            "api_token": "your_token_here_2"
+        }
+    }
+}
 ```
 
-> **注意**：`API_TOKEN` 可以从 DigitalPlat 控制面板获取。
+> **注意**：`api_token` 可以从 DigitalPlat 控制面板获取。
 
 ## 📖 使用指南
 
@@ -63,7 +68,7 @@ python main.py
 
 ## ⚠️ 常见问题
 
-- **403 错误**：通常是 API Token 无效或过期，请检查 `.env` 配置。
+- **403 错误**：通常是 API Token 无效或过期，请检查 `users.json` 配置。
 - **网络错误**：请检查网络连接，或确保能够访问 `domain-api.digitalplat.org`。
 - **注册失败**：请检查域名是否符合规则，或者对应的槽位（Slot）是否已满。
 

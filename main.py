@@ -1,53 +1,40 @@
 import asyncio
+import json
 import os
 import sys
 import httpx
 import questionary
 from typing import List, Dict, Optional
 
-BASE_URL = "https://domain-api.digitalplat.org/api/v1"
-
-def load_users_from_env(file_path: str = ".env") -> List[Dict[str, str]]:
-    """手动解析 .env 文件以支持多账号配置"""
-    users = []
-    current_user = {}
-    
+def load_users_from_json(file_path: str = "users.json") -> tuple[str, List[Dict[str, str]]]:
+    """从 users.json 加载 API 基础 URL 和用户列表"""
     if not os.path.exists(file_path):
-        return []
-
-    with open(file_path, "r", encoding="utf-8") as f:
-        for line in f:
-            line = line.strip()
-            # 忽略注释和空行
-            if not line or line.startswith("#"):
-                continue
-            
-            if "=" in line:
-                key, val = line.split("=", 1)
-                key = key.strip()
-                val = val.strip()
-                
-                # 如果遇到重复的 USER 键，说明进入了下一个用户块
-                if key == "USER" and "USER" in current_user:
-                    users.append(current_user)
-                    current_user = {}
-                
-                current_user[key] = val
-
-        # 添加最后一个用户块
-        if current_user:
-            users.append(current_user)
-            
-    return [u for u in users if "API_TOKEN" in u]
+        return "", []
+    try:
+        with open(file_path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+        base_url = data.get("api_base_url", "https://domain-api.digitalplat.org/api/v1")
+        profiles_data = data.get("profiles", {})
+        users = []
+        for username, profile in profiles_data.items():
+            users.append({
+                "USER": username,
+                "MAIL": profile.get("mail", ""),
+                "API_TOKEN": profile.get("api_token", "")
+            })
+        return base_url, users
+    except Exception as e:
+        print(f"❌ [错误]: 解析 {file_path} 失败: {e}")
+        return "", []
 
 class USKGClient:
-    def __init__(self, token: str):
+    def __init__(self, token: str, base_url: str):
         self.headers = {
             "Authorization": f"Bearer {token}",
             "Accept": "application/json",
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
         }
-        self.client = httpx.AsyncClient(base_url=BASE_URL, headers=self.headers, timeout=15.0, follow_redirects=True)
+        self.client = httpx.AsyncClient(base_url=base_url, headers=self.headers, timeout=15.0, follow_redirects=True)
 
     async def list_domains(self):
         try:
@@ -90,11 +77,11 @@ def clear_screen():
     os.system('cls' if os.name == 'nt' else 'clear')
 
 async def interactive_menu():
-    users = load_users_from_env()
+    base_url, users = load_users_from_json()
     
     if not users:
-        print("❌ [错误]: 未在 .env 文件中检测到有效的用户配置。")
-        print("请确保格式为: \nUSER=xxx\nMAIL=xxx\nAPI_TOKEN=xxx")
+        print("❌ [错误]: 未在 users.json 文件中检测到有效的用户配置。")
+        print("请确保格式为 JSON，且包含 profiles 键。")
         return
 
     # 1. 选择账号
@@ -114,7 +101,7 @@ async def interactive_menu():
 
     clear_screen()
     print(f"✅ 已登录账号: {current_account.get('USER')} ({current_account.get('MAIL')})")
-    client = USKGClient(current_account.get("API_TOKEN"))
+    client = USKGClient(current_account.get("API_TOKEN"), base_url)
     
     try:
         while True:
